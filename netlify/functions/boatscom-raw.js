@@ -33,7 +33,7 @@ export default async (req) => {
 
   const boatsComUrl =
     "https://services.boats.com/pls/boats/search" +
-    "?fields=DocumentId,YachtWorldID,CabinsCountNumeric,MaximumNumberOfPassengersNumeric,EngineMakeString,EngineModel,EngineFuel,TotalEnginePowerQuantity,BoatLocation,ModelYear,GeneralBoatDescription,MaximumSpeedMeasure,TaxStatusCode,ModelExact,Images,Price,NormNominalLength,MakeStringExact,Videos" +
+    "?fields=DocumentId,YachtWorldID,CabinsCountNumeric,MaximumNumberOfPassengersNumeric,EngineMakeString,EngineModel,EngineFuel,TotalEnginePowerQuantity,BoatLocation,ModelYear,GeneralBoatDescription,MaximumSpeedMeasure,TaxStatusCode,ModelExact,Images,Price,NormNominalLength,MakeStringExact,Videos,ImmersiveTour" +
     "&rows=1000" +
     `&key=${encodeURIComponent(cfg.boatsComKey)}` +
     "&currency=original";

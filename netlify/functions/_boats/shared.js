@@ -468,6 +468,20 @@ function normalizeBoatsComVideos(videos) {
   return out;
 }
 
+/**
+ * The site is https, so an http tour URL is blocked outright as mixed content and
+ * renders as an unexplained blank frame. `AdditionalMedia` already carries http
+ * URLs today (7 of them, all manufacturer links rather than tours), so this is a
+ * live shape in the feed rather than a hypothetical. Upgrading is strictly better
+ * than passing it through: a blocked frame never works, an upgraded one usually does.
+ */
+function normalizeTourUrl(raw) {
+  const url = typeof raw === "string" ? raw.trim() : "";
+  if (!url) return "";
+  if (url.startsWith("http://")) return `https://${url.slice("http://".length)}`;
+  return url.startsWith("https://") ? url : "";
+}
+
 function normalizeBoatsComTours(tours) {
   // boats.com returns ImmersiveTour as an array of { Uri, Title }. Titles are
   // frequently empty or boilerplate ("Take the 3D Tour!"), so the label is left
@@ -476,7 +490,7 @@ function normalizeBoatsComTours(tours) {
 
   const out = [];
   for (const tour of list) {
-    const url = typeof tour?.Uri === "string" ? tour.Uri.trim() : "";
+    const url = normalizeTourUrl(tour?.Uri);
     if (!url) continue;
     out.push({
       url,
@@ -780,12 +794,15 @@ function normalizeBoatWizardNode(node, currConvert) {
     // stills as "360 Photo". Ventura asked for walkthroughs only, so the 360
     // stills are deliberately not collected here — they are also plain JPEGs
     // on images.boatsgroup.com, not something that can be toured.
-    if (type === "Immersive Tour") {
-      tours.push({
-        url,
-        title: extractXmlValue(media?.MediaAttachmentTitle) || "",
-        type,
-      });
+    if (type.trim().toLowerCase() === "immersive tour") {
+      const tourUrl = normalizeTourUrl(url);
+      if (tourUrl) {
+        tours.push({
+          url: tourUrl,
+          title: extractXmlValue(media?.MediaAttachmentTitle) || "",
+          type,
+        });
+      }
       continue;
     }
 

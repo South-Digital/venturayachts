@@ -1,3 +1,11 @@
+# The publish directory is deliberately NOT the repo root. It used to be, which
+# meant every file in the repo was served from the site: package.json, the README,
+# the stale framer/ copy, and every function source under netlify/functions —
+# including _boats/shared.js and the API keys hardcoded in it. Only public/ is
+# public now; functions are still bundled from the directory below.
+[build]
+  publish = "public"
+
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"

@@ -22,7 +22,10 @@ const DEFAULT_BLOB_KEY = "base-dataset";
 // Bumped to 2 with the partial-build guard: v1 payloads predate the `partial`
 // flag, so a truncated snapshot stored under v1 cannot be told apart from a
 // complete one. Ignoring them forces one clean rebuild after deploy.
-const BLOB_SCHEMA_VERSION = 2;
+// Bumped to 3 when `tours` was added: a v2 snapshot has no `tours` key, and a
+// missing key is indistinguishable from "this boat has no tour", so every
+// listing would silently render tour-less until the TTL expired.
+const BLOB_SCHEMA_VERSION = 3;
 
 const DEFAULT_BOATSCOM_KEY = "5bd306bd6169";
 const DEFAULT_BOATWIZARD_EVENT_ID = "80eef85c-313d-4b83-9053-0cba19e92a93";
@@ -465,6 +468,26 @@ function normalizeBoatsComVideos(videos) {
   return out;
 }
 
+function normalizeBoatsComTours(tours) {
+  // boats.com returns ImmersiveTour as an array of { Uri, Title }. Titles are
+  // frequently empty or boilerplate ("Take the 3D Tour!"), so the label is left
+  // to the caller rather than being invented here.
+  const list = Array.isArray(tours) ? tours : tours ? [tours] : [];
+
+  const out = [];
+  for (const tour of list) {
+    const url = typeof tour?.Uri === "string" ? tour.Uri.trim() : "";
+    if (!url) continue;
+    out.push({
+      url,
+      title: typeof tour?.Title === "string" ? tour.Title.trim() : "",
+      type: "Immersive Tour",
+    });
+  }
+
+  return out;
+}
+
 function extractEmbeddedMediaUrl(raw) {
   if (!raw) return "";
   const s = raw.toString();
@@ -576,6 +599,7 @@ function normalizeBoatsCom(item, currConvert) {
   }
 
   const videos = normalizeBoatsComVideos(item?.Videos);
+  const tours = normalizeBoatsComTours(item?.ImmersiveTour);
 
   return {
     boat_id: idRaw.toString(),
@@ -609,6 +633,7 @@ function normalizeBoatsCom(item, currConvert) {
     main_image,
     image,
     videos,
+    tours,
     feed: "cobrokerage",
   };
 }
@@ -740,6 +765,7 @@ function normalizeBoatWizardNode(node, currConvert) {
     : [];
 
   const videos = [];
+  const tours = [];
   for (const media of additionalMedia) {
     const type = extractXmlValue(media?.MediaTypeString) || "";
     const subtype = extractXmlValue(media?.MediaSubTypeString) || "";
@@ -749,6 +775,20 @@ function normalizeBoatWizardNode(node, currConvert) {
     const embeddedUrl = embeddedRaw ? extractEmbeddedMediaUrl(embeddedRaw) : "";
     const url = mediaUrl || embeddedUrl;
     if (!url) continue;
+
+    // BoatWizard types walkthrough tours as "Immersive Tour" and panoramic
+    // stills as "360 Photo". Ventura asked for walkthroughs only, so the 360
+    // stills are deliberately not collected here — they are also plain JPEGs
+    // on images.boatsgroup.com, not something that can be toured.
+    if (type === "Immersive Tour") {
+      tours.push({
+        url,
+        title: extractXmlValue(media?.MediaAttachmentTitle) || "",
+        type,
+      });
+      continue;
+    }
+
     if (!haystack.includes("video") && !looksLikeVideoUrl(url)) continue;
 
     videos.push({
@@ -791,6 +831,7 @@ function normalizeBoatWizardNode(node, currConvert) {
     main_image,
     image,
     videos,
+    tours,
     feed: "ventura",
   };
 }
@@ -803,7 +844,7 @@ export async function fetchAndBuildBaseDataset() {
 
   const boatsComUrl =
     "https://services.boats.com/pls/boats/search" +
-    "?fields=DocumentId,YachtWorldID,CabinsCountNumeric,MaximumNumberOfPassengersNumeric,EngineMakeString,EngineModel,EngineFuel,TotalEnginePowerQuantity,BoatLocation,ModelYear,GeneralBoatDescription,MaximumSpeedMeasure,TaxStatusCode,ModelExact,Images,Price,NormNominalLength,MakeStringExact,Videos" +
+    "?fields=DocumentId,YachtWorldID,CabinsCountNumeric,MaximumNumberOfPassengersNumeric,EngineMakeString,EngineModel,EngineFuel,TotalEnginePowerQuantity,BoatLocation,ModelYear,GeneralBoatDescription,MaximumSpeedMeasure,TaxStatusCode,ModelExact,Images,Price,NormNominalLength,MakeStringExact,Videos,ImmersiveTour" +
     "&rows=1000" +
     `&key=${encodeURIComponent(cfg.boatsComKey)}` +
     "&currency=original";

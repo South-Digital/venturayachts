@@ -19,7 +19,7 @@ async function fetchWithTimeout(url, timeoutMs, options = {}) {
   }
 }
 
-export default async (req) => {
+const handler = async (req) => {
   const cfg = getConfig();
   const timeoutMs = Math.max(1000, cfg.sourceFetchTimeoutMs || DEFAULT_TIMEOUT_MS);
 
@@ -64,3 +64,11 @@ export default async (req) => {
     return jsonResponse({ error: e?.message || "Fetch failed" }, 500, {}, req);
   }
 };
+
+// Vercel's Node runtime treats a bare default-exported function as the legacy
+// (req, res) Node handler: it would be invoked with IncomingMessage/ServerResponse,
+// the returned Response would be discarded and the request would hang until it
+// failed with FUNCTION_INVOCATION_FAILED. Exporting an object with a `fetch`
+// method is the documented Web-standard shape, and it keeps the handler above
+// byte-for-byte identical to the Netlify original.
+export default { fetch: handler };

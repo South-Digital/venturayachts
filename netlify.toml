@@ -9,6 +9,15 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
+  # sharp is deliberately NOT bundled — it is copied from node_modules — so the
+  # function zip contains whatever PLATFORM binary the deploying machine happens
+  # to have installed. A `netlify deploy` from a Mac ships @img/sharp-darwin-arm64,
+  # and the function then dies at import on Netlify's linux-x64 runtime: every
+  # /img request 502s with "Could not load the sharp module using the linux-x64
+  # runtime". That is what broke every brokerage photo between 7 and 9 Sep 2026 —
+  # img.mjs imports sharp at the top level, so even /img with no arguments 502s.
+  # Deploy from CI (ubuntu `npm ci` installs the linux binary natively), or run
+  # `npm run deploy:prep` before deploying by hand.
   external_node_modules = ["sharp"]
 
 [[redirects]]

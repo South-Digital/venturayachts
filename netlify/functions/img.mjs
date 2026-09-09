@@ -1,4 +1,15 @@
-import sharp from "sharp";
+// sharp is loaded lazily, on purpose. As a static top-level import, a missing or
+// wrong-platform native binary takes the whole module down at load time — so the
+// "never break the image" fallbacks below never get a chance to run and EVERY
+// request 502s, including ones with no url param. That blacked out every
+// brokerage photo between 7 and 9 Sep 2026, after a macOS hand deploy shipped
+// darwin-only binaries to a linux-x64 runtime. Loading it here means a broken
+// binary degrades to full-size originals instead of an outage.
+let sharpPromise;
+function loadSharp() {
+  sharpPromise ??= import("sharp").then((m) => m.default);
+  return sharpPromise;
+}
 
 // Netlify Function (v2) — on-the-fly image resize + WebP transcode.
 // Served at /img so Framer can request appropriately-sized variants of the
@@ -70,6 +81,8 @@ export default async (req) => {
     }
 
     const input = Buffer.from(await res.arrayBuffer());
+
+    const sharp = await loadSharp();
 
     const output = await sharp(input)
       .rotate() // respect EXIF orientation

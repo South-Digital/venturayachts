@@ -1,0 +1,25 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    { "source": "/boats/related/:id", "destination": "/api/related-boats?id=:id" },
+    { "source": "/boats/related", "destination": "/api/related-boats" },
+    { "source": "/boats/refresh", "destination": "/api/boats-refresh" },
+    { "source": "/boats/:id", "destination": "/api/boats?id=:id" },
+    { "source": "/boats", "destination": "/api/boats" },
+    { "source": "/brands", "destination": "/api/brands" },
+    { "source": "/boatscom-raw", "destination": "/api/boatscom-raw" },
+    { "source": "/boatwizard-raw", "destination": "/api/boatwizard-raw" },
+    { "source": "/img", "destination": "/api/img" },
+    { "source": "/.netlify/functions/:fn", "destination": "/api/:fn" }
+  ],
+  "crons": [
+    { "path": "/api/boats-scheduled-refresh", "schedule": "*/30 * * * *" }
+  ],
+  "functions": {
+    "api/boats-refresh.js": { "maxDuration": 60 },
+    "api/boats-scheduled-refresh.js": { "maxDuration": 60 },
+    "api/boats-all.js": { "maxDuration": 30 },
+    "api/cyaboats.js": { "maxDuration": 30 },
+    "api/related-cyaboats.js": { "maxDuration": 30 }
+  }
+}

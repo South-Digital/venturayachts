@@ -1,4 +1,4 @@
-import { getStore } from "@netlify/blobs";
+import { getStore } from "./_lib/blob-store.js";
 
 /* ============================================================================
  * Configuration defaults

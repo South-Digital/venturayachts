@@ -1,17 +1,16 @@
+
+!.env.example
 # Dependencies
-node_modules/
-
-# Netlify
-.netlify/
-
 # Environment
+# Logs
+# Netlify
+# OS
+*.log
+.DS_Store
 .env
 .env.*
-!.env.example
-
-# Logs
-*.log
+.netlify/
+.vercel
+node_modules
+node_modules/
 npm-debug.log*
-
-# OS
-.DS_Store

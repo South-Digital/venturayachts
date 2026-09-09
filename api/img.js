@@ -15,7 +15,7 @@ function loadSharp() {
 // Served at /img so Framer can request appropriately-sized variants of the
 // full-resolution photos coming from the boat feed. We are on the free plan,
 // so this deliberately avoids the Netlify Image CDN.
-export const config = { path: "/img" };
+// Routing lives in vercel.json ("rewrites"): /img -> /api/img.
 
 // Only these upstream hosts may be fetched (SSRF guard). These are the
 // origins the feed serves photo URLs from. CYA have moved part of their

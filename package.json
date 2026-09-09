@@ -1,12 +1,11 @@
 {
   "type": "module",
   "scripts": {
-    "deploy:prep": "npm install --cpu=x64 --os=linux --libc=glibc --include=optional sharp",
-    "deploy": "npm run deploy:prep && netlify deploy --prod"
+    "dev": "vercel dev",
+    "deploy": "vercel deploy"
   },
   "dependencies": {
-    "@netlify/blobs": "^10.7.2",
-    "@netlify/cache": "^3.3.5",
+    "@vercel/blob": "^2.0.0",
     "fast-xml-parser": "^4.3.6",
     "sharp": "^0.33.5"
   }

@@ -1,4 +1,4 @@
-import { getStore } from "@netlify/blobs";
+import { getStore } from "../_lib/blob-store.js";
 import { XMLParser } from "fast-xml-parser";
 
 const DEFAULT_TTL_SECONDS = 30 * 60;
